@@ -53,24 +53,28 @@ export default function Header({
     >
       {/* Top row */}
       <div className="flex items-center gap-4 px-5 h-14">
-        {/* Wordmark */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span
-            className="text-xl font-bold tracking-tight"
-            style={{
-              fontFamily: "Syne, sans-serif",
-              color: "#00E5CC",
-              textShadow: "0 0 20px rgba(0,229,204,0.4)",
-            }}
-          >
-            STRIDE
-          </span>
-          <span
-            className="text-xs font-medium tracking-widest uppercase opacity-50"
-            style={{ fontFamily: "Space Grotesk, sans-serif", color: "#94A3B8" }}
-          >
-            {activeView === "command" ? "Command Center" : "Client Map"}
-          </span>
+        {/* Brand mark (otter only) */}
+        <div className="flex items-center gap-3 shrink-0">
+          <img
+            src="/stride-otter.png"
+            alt="Stride"
+            className="h-8 w-auto select-none"
+            draggable={false}
+          />
+          <div className="flex flex-col leading-none">
+            <span
+              className="text-[10px] font-bold tracking-[0.2em] uppercase"
+              style={{ fontFamily: "Nunito, system-ui, sans-serif", color: "#2E55B5" }}
+            >
+              Stride
+            </span>
+            <span
+              className="text-[10px] font-medium tracking-[0.14em] uppercase mt-0.5"
+              style={{ fontFamily: "Nunito, system-ui, sans-serif", color: "#94A3B8" }}
+            >
+              {activeView === "command" ? "Command" : "Client Map"}
+            </span>
+          </div>
         </div>
 
         {/* View Toggle */}
@@ -89,7 +93,7 @@ export default function Header({
                 onClick={() => onViewChange(view)}
                 className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all"
                 style={{
-                  fontFamily: "Space Grotesk, sans-serif",
+                  fontFamily: "Nunito, system-ui, sans-serif",
                   background: isActive ? "#FFFFFF" : "transparent",
                   color: isActive ? "#0F172A" : "#94A3B8",
                   boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
@@ -127,10 +131,10 @@ export default function Header({
               background: "#F8FAFC",
               border: "1px solid #E2E8F0",
               color: "#1E293B",
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "Nunito, system-ui, sans-serif",
             }}
             onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(0,229,204,0.4)")
+              (e.target.style.borderColor = "rgba(46,85,181,0.4)")
             }
             onBlur={(e) => (e.target.style.borderColor = "#E2E8F0")}
           />
@@ -166,7 +170,7 @@ export default function Header({
                     className="text-sm"
                     style={{
                       color: "#1E293B",
-                      fontFamily: "Space Grotesk, sans-serif",
+                      fontFamily: "Nunito, system-ui, sans-serif",
                     }}
                   >
                     {client.name}
@@ -189,7 +193,7 @@ export default function Header({
             >
               <p
                 className="text-xs text-center"
-                style={{ color: "#64748B", fontFamily: "Space Grotesk, sans-serif" }}
+                style={{ color: "#64748B", fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 No clients found
               </p>
@@ -213,10 +217,10 @@ export default function Header({
                 onClick={() => onTypeFilterChange(value)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
                 style={{
-                  fontFamily: "Space Grotesk, sans-serif",
-                  background: isActive ? "rgba(0,229,204,0.12)" : "#F8FAFC",
-                  border: `1px solid ${isActive ? "rgba(0,229,204,0.5)" : "#E2E8F0"}`,
-                  color: isActive ? "#00E5CC" : "#64748B",
+                  fontFamily: "Nunito, system-ui, sans-serif",
+                  background: isActive ? "rgba(46,85,181,0.12)" : "#F8FAFC",
+                  border: `1px solid ${isActive ? "rgba(46,85,181,0.5)" : "#E2E8F0"}`,
+                  color: isActive ? "#2E55B5" : "#64748B",
                 }}
               >
                 {icon}
@@ -239,7 +243,7 @@ export default function Header({
                 onClick={() => onFilterChange(isActive ? null : status)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
                 style={{
-                  fontFamily: "Space Grotesk, sans-serif",
+                  fontFamily: "Nunito, system-ui, sans-serif",
                   background: isActive
                     ? STATUS_COLORS[status] + "22"
                     : "#F8FAFC",
@@ -262,10 +266,10 @@ export default function Header({
           onClick={onAddClient}
           className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold shrink-0 transition-all hover:brightness-110 active:scale-95"
           style={{
-            background: "#00E5CC",
-            color: "#0E1117",
-            fontFamily: "Space Grotesk, sans-serif",
-            boxShadow: "0 0 16px rgba(0,229,204,0.25)",
+            background: "#2E55B5",
+            color: "#FFFFFF",
+            fontFamily: "Nunito, system-ui, sans-serif",
+            boxShadow: "0 0 16px rgba(46,85,181,0.35)",
           }}
         >
           <Plus size={14} />

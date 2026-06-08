@@ -8,6 +8,7 @@ import MapView from "@/components/map/MapView";
 import StatusLegend from "@/components/map/StatusLegend";
 import ClientModal from "@/components/map/ClientModal";
 import CommandCenter from "@/components/map/CommandCenter";
+import CallsThisWeek from "@/components/map/CallsThisWeek";
 
 function dbRowToClient(row: Record<string, unknown>): Client {
   return {
@@ -173,13 +174,13 @@ export default function Home() {
   return (
     <div
       className="w-screen h-screen overflow-hidden relative"
-      style={{ background: "#0E1117", fontFamily: "Space Grotesk, sans-serif" }}
+      style={{ background: "#0E1117", fontFamily: "Nunito, system-ui, sans-serif" }}
     >
       {/* Google Fonts */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap"
         rel="stylesheet"
       />
 
@@ -239,7 +240,7 @@ export default function Home() {
               >
                 <span
                   className="text-sm tracking-widest uppercase"
-                  style={{ color: "#00E5CC", fontFamily: "JetBrains Mono, monospace" }}
+                  style={{ color: "#2E55B5", fontFamily: "JetBrains Mono, monospace" }}
                 >
                   Loading clients…
                 </span>
@@ -267,6 +268,11 @@ export default function Home() {
                 activeFilter={activeFilter}
                 onFilterChange={setActiveFilter}
               />
+            </div>
+
+            {/* Calls This Week panel */}
+            <div className="absolute top-6 right-6 z-[500] w-80 max-h-[80vh] overflow-y-auto">
+              <CallsThisWeek />
             </div>
           </div>
         </>

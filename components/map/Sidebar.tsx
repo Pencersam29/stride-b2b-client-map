@@ -81,7 +81,7 @@ export default function Sidebar({
                 className="text-sm font-bold tracking-wide uppercase"
                 style={{
                   color: "#475569",
-                  fontFamily: "Syne, sans-serif",
+                  fontFamily: "Nunito, system-ui, sans-serif",
                   letterSpacing: "0.08em",
                 }}
               >
@@ -91,7 +91,7 @@ export default function Sidebar({
                 className="text-xs tabular-nums px-2 py-0.5 rounded-full"
                 style={{
                   background: "#F1F5F9",
-                  color: "#00E5CC",
+                  color: "#2E55B5",
                   fontFamily: "'JetBrains Mono', monospace",
                   border: "1px solid #E2E8F0",
                 }}
@@ -114,10 +114,10 @@ export default function Sidebar({
                     onClick={() => onTypeFilterChange(value)}
                     className="flex-1 py-1 text-xs rounded flex items-center justify-center gap-1 transition-all"
                     style={{
-                      background: isActive ? "rgba(0,229,204,0.1)" : "#F8FAFC",
-                      border: `1px solid ${isActive ? "rgba(0,229,204,0.3)" : "#E2E8F0"}`,
-                      color: isActive ? "#00E5CC" : "#64748B",
-                      fontFamily: "Space Grotesk, sans-serif",
+                      background: isActive ? "rgba(46,85,181,0.1)" : "#F8FAFC",
+                      border: `1px solid ${isActive ? "rgba(46,85,181,0.3)" : "#E2E8F0"}`,
+                      color: isActive ? "#2E55B5" : "#64748B",
+                      fontFamily: "Nunito, system-ui, sans-serif",
                     }}
                   >
                     {icon}
@@ -142,7 +142,7 @@ export default function Sidebar({
                         : "#F8FAFC",
                       border: `1px solid ${isActive ? STATUS_COLORS[status] + "60" : "#E2E8F0"}`,
                       color: isActive ? STATUS_COLORS[status] : "#4A5568",
-                      fontFamily: "Space Grotesk, sans-serif",
+                      fontFamily: "Nunito, system-ui, sans-serif",
                     }}
                   >
                     <div
@@ -163,7 +163,7 @@ export default function Sidebar({
                 <MapPin size={20} style={{ color: "#CBD5E1" }} />
                 <p
                   className="text-xs"
-                  style={{ color: "#4A5568", fontFamily: "Space Grotesk, sans-serif" }}
+                  style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
                 >
                   No clients match filters
                 </p>
@@ -203,7 +203,7 @@ function ClientCard({
       onClick={onClick}
       className="w-full flex items-stretch text-left transition-all group"
       style={{
-        background: isSelected ? "rgba(0,229,204,0.05)" : "transparent",        borderLeft: isSelected ? `3px solid ${color}` : "3px solid transparent",
+        background: isSelected ? "rgba(46,85,181,0.05)" : "transparent",        borderLeft: isSelected ? `3px solid ${color}` : "3px solid transparent",
       }}
     >
       {/* Color bar */}
@@ -221,7 +221,7 @@ function ClientCard({
             className="text-sm font-semibold leading-tight"
             style={{
               color: isSelected ? "#1E293B" : "#475569",
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "Nunito, system-ui, sans-serif",
             }}
           >
             {client.name}
@@ -231,7 +231,7 @@ function ClientCard({
             style={{
               background: color + "18",
               color: color,
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "Nunito, system-ui, sans-serif",
               border: `1px solid ${color}30`,
             }}
           >
@@ -248,7 +248,7 @@ function ClientCard({
             )}
             <span
               className="text-xs"
-              style={{ color: "#94A3B8", fontFamily: "Space Grotesk, sans-serif" }}
+              style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
             >
               {client.type}
             </span>
@@ -257,7 +257,7 @@ function ClientCard({
             <MapPin size={10} style={{ color: "#94A3B8" }} />
             <span
               className="text-xs"
-              style={{ color: "#94A3B8", fontFamily: "Space Grotesk, sans-serif" }}
+              style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
             >
               {client.address ? `${client.address}, ` : ""}{client.city}, {client.provinceState}
             </span>
@@ -268,7 +268,7 @@ function ClientCard({
           <User size={10} style={{ color: "#CBD5E1" }} />
           <span
             className="text-xs truncate"
-            style={{ color: "#CBD5E1", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ color: "#CBD5E1", fontFamily: "Nunito, system-ui, sans-serif" }}
           >
             {client.contactName}
           </span>

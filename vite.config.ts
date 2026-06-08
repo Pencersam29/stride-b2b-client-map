@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig({
   base: process.env.NODE_ENV === "development" ? "/" : process.env.VITE_BASE_PATH || "/",
   optimizeDeps: {
-    entries: ["src/main.tsx", "src/tempobook/**/*"],
+    entries: ["main.tsx"],
   },
   plugins: [
     react(),
@@ -14,7 +14,7 @@ export default defineConfig({
   resolve: {
     preserveSymlinks: true,
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "."),
     },
   },
   server: {

@@ -19,7 +19,7 @@ export default function StatsStrip({ clients, typeFilter }: StatsStripProps) {
   const prospects = scoped.filter((c) => c.status === "Prospect").length;
 
   const stats = [
-    { label: typeFilter ? typeFilter : "Total Accounts", value: total, color: "#00E5CC" },
+    { label: typeFilter ? typeFilter : "Total Accounts", value: total, color: "#2E55B5" },
     { label: "Interested in Trial", value: interestedInTrial, color: STATUS_COLORS["Interested in Trial"] },
     { label: "Signed", value: signed, color: STATUS_COLORS["Signed"] },
     { label: "In Pipeline", value: inPipeline, color: STATUS_COLORS["In Pipeline"] },
@@ -39,10 +39,10 @@ export default function StatsStrip({ clients, typeFilter }: StatsStripProps) {
         <div
           className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
           style={{
-            background: typeFilter === "Homecare" ? "rgba(0,229,204,0.08)" : "#F1F5F9",
-            border: `1px solid ${typeFilter === "Homecare" ? "rgba(0,229,204,0.3)" : "#E2E8F0"}`,
-            color: typeFilter === "Homecare" ? "#00E5CC" : "#64748B",
-            fontFamily: "Space Grotesk, sans-serif",
+            background: typeFilter === "Homecare" ? "rgba(46,85,181,0.08)" : "#F1F5F9",
+            border: `1px solid ${typeFilter === "Homecare" ? "rgba(46,85,181,0.3)" : "#E2E8F0"}`,
+            color: typeFilter === "Homecare" ? "#2E55B5" : "#64748B",
+            fontFamily: "Nunito, system-ui, sans-serif",
           }}
         >
           <Heart size={9} />
@@ -54,10 +54,10 @@ export default function StatsStrip({ clients, typeFilter }: StatsStripProps) {
         <div
           className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
           style={{
-            background: typeFilter === "Retirement Home" ? "rgba(0,229,204,0.08)" : "#F1F5F9",
-            border: `1px solid ${typeFilter === "Retirement Home" ? "rgba(0,229,204,0.3)" : "#E2E8F0"}`,
-            color: typeFilter === "Retirement Home" ? "#00E5CC" : "#64748B",
-            fontFamily: "Space Grotesk, sans-serif",
+            background: typeFilter === "Retirement Home" ? "rgba(46,85,181,0.08)" : "#F1F5F9",
+            border: `1px solid ${typeFilter === "Retirement Home" ? "rgba(46,85,181,0.3)" : "#E2E8F0"}`,
+            color: typeFilter === "Retirement Home" ? "#2E55B5" : "#64748B",
+            fontFamily: "Nunito, system-ui, sans-serif",
           }}
         >
           <Building2 size={9} />
@@ -76,7 +76,7 @@ export default function StatsStrip({ clients, typeFilter }: StatsStripProps) {
           )}
           <span
             className="text-xs"
-            style={{ color: "#64748B", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ color: "#64748B", fontFamily: "Nunito, system-ui, sans-serif" }}
           >
             {stat.label}
           </span>

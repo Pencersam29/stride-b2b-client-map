@@ -53,7 +53,7 @@ export default function ClientPopover({
           <div className="flex-1 min-w-0">
             <h3
               className="text-sm font-bold leading-tight truncate"
-              style={{ color: "#E2E8F0", fontFamily: "Syne, sans-serif" }}
+              style={{ color: "#E2E8F0", fontFamily: "Nunito, system-ui, sans-serif" }}
             >
               {client.name}
             </h3>
@@ -65,7 +65,7 @@ export default function ClientPopover({
               )}
               <span
                 className="text-xs"
-                style={{ color: "#4A5568", fontFamily: "Space Grotesk, sans-serif" }}
+                style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 {client.type}
               </span>
@@ -131,7 +131,7 @@ export default function ClientPopover({
       >
         <p
           className="text-xs mb-2"
-          style={{ color: "#4A5568", fontFamily: "Space Grotesk, sans-serif" }}
+          style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
         >
           Status
         </p>
@@ -148,7 +148,7 @@ export default function ClientPopover({
                   background: isActive ? sc + "22" : "#0E1117",
                   border: `1px solid ${isActive ? sc : "#1E2533"}`,
                   color: isActive ? sc : "#4A5568",
-                  fontFamily: "Space Grotesk, sans-serif",
+                  fontFamily: "Nunito, system-ui, sans-serif",
                 }}
               >
                 {s}
@@ -166,13 +166,13 @@ export default function ClientPopover({
         >
           <p
             className="text-xs mb-1"
-            style={{ color: "#4A5568", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
           >
             Notes
           </p>
           <p
             className="text-xs leading-relaxed"
-            style={{ color: "#64748B", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ color: "#64748B", fontFamily: "Nunito, system-ui, sans-serif" }}
           >
             {client.notes}
           </p>
@@ -191,7 +191,7 @@ export default function ClientPopover({
             style={{
               border: "1px solid #1E2533",
               color: "#64748B",
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "Nunito, system-ui, sans-serif",
             }}
           >
             <Edit2 size={12} />
@@ -203,7 +203,7 @@ export default function ClientPopover({
             style={{
               border: "1px solid rgba(251,113,133,0.2)",
               color: "#FB7185",
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "Nunito, system-ui, sans-serif",
             }}
           >
             <Trash2 size={12} />
@@ -217,7 +217,7 @@ export default function ClientPopover({
         >
           <p
             className="text-xs text-center mb-3"
-            style={{ color: "#94A3B8", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
           >
             Delete this client permanently?
           </p>
@@ -228,7 +228,7 @@ export default function ClientPopover({
               style={{
                 border: "1px solid #1E2533",
                 color: "#64748B",
-                fontFamily: "Space Grotesk, sans-serif",
+                fontFamily: "Nunito, system-ui, sans-serif",
               }}
             >
               Cancel
@@ -239,7 +239,7 @@ export default function ClientPopover({
               style={{
                 background: "#FB7185",
                 color: "#0E1117",
-                fontFamily: "Space Grotesk, sans-serif",
+                fontFamily: "Nunito, system-ui, sans-serif",
               }}
             >
               Confirm Delete
@@ -266,13 +266,13 @@ function InfoRow({
       <div>
         <span
           className="text-xs block"
-          style={{ color: "#4A5568", fontFamily: "Space Grotesk, sans-serif" }}
+          style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
         >
           {label}
         </span>
         <span
           className="text-xs"
-          style={{ color: "#94A3B8", fontFamily: "Space Grotesk, sans-serif" }}
+          style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
         >
           {children}
         </span>

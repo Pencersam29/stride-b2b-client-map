@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@source "../components";
+@source "../App.tsx";
+
+@import "leaflet/dist/leaflet.css";
+
+.leaflet-container {
+  background: #F1F5F9 !important;
+}
+.leaflet-tile-pane {
+  opacity: 1;
+}
+.leaflet-attribution-flag {
+  display: none !important;
+}
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #94A3B8 !important;
+  font-size: 9px !important;
+}

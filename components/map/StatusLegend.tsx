@@ -40,7 +40,7 @@ export default function StatusLegend({
               background: isActive ? color + "18" : "transparent",
               border: `1px solid ${isActive ? color + "60" : "transparent"}`,
               color: isActive ? color : "#94A3B8",
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "Nunito, system-ui, sans-serif",
             }}
           >
             <div

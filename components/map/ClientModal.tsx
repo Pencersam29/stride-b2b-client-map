@@ -195,13 +195,13 @@ export default function ClientModal({
           <div>
             <h2
               className="text-base font-bold"
-              style={{ color: "#1E293B", fontFamily: "Syne, sans-serif" }}
+              style={{ color: "#1E293B", fontFamily: "Nunito, system-ui, sans-serif" }}
             >
               {editClient ? "Edit Client" : "Add New Client"}
             </h2>
             <p
               className="text-xs mt-0.5"
-              style={{ color: "#94A3B8", fontFamily: "Space Grotesk, sans-serif" }}
+              style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
             >
               {editClient
                 ? "Update client information"
@@ -424,7 +424,7 @@ export default function ClientModal({
               <AlertCircle size={14} className="mt-0.5 shrink-0" style={{ color: "#FB7185" }} />
               <p
                 className="text-xs"
-                style={{ color: "#FB7185", fontFamily: "Space Grotesk, sans-serif" }}
+                style={{ color: "#FB7185", fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 {geocodeError}
               </p>
@@ -441,7 +441,7 @@ export default function ClientModal({
             type="button"
             onClick={onClose}
             className="px-4 py-2 text-sm rounded-md transition-colors hover:bg-slate-100"
-            style={{ color: "#64748B", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ color: "#64748B", fontFamily: "Nunito, system-ui, sans-serif" }}
           >
             Cancel
           </button>
@@ -450,10 +450,10 @@ export default function ClientModal({
             disabled={isLoading}
             className="flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-md transition-all hover:brightness-110 disabled:opacity-60"
             style={{
-              background: "#00E5CC",
+              background: "#2E55B5",
               color: "#0E1117",
-              fontFamily: "Space Grotesk, sans-serif",
-              boxShadow: "0 0 16px rgba(0,229,204,0.2)",
+              fontFamily: "Nunito, system-ui, sans-serif",
+              boxShadow: "0 0 16px rgba(46,85,181,0.2)",
             }}
           >
             {isLoading ? (
@@ -486,7 +486,7 @@ function FormField({
     <div className="flex flex-col gap-1.5">
       <label
         className="text-xs font-medium"
-        style={{ color: "#475569", fontFamily: "Space Grotesk, sans-serif" }}
+        style={{ color: "#475569", fontFamily: "Nunito, system-ui, sans-serif" }}
       >
         {label}
       </label>
@@ -501,7 +501,7 @@ function FormField({
       {error && (
         <p
           className="text-xs"
-          style={{ color: "#FB7185", fontFamily: "Space Grotesk, sans-serif" }}
+          style={{ color: "#FB7185", fontFamily: "Nunito, system-ui, sans-serif" }}
         >
           {error}
         </p>

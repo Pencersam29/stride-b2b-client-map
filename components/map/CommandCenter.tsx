@@ -47,7 +47,7 @@ function Stepper({
       <button
         onClick={() => onChange(Math.max(min, value - 1))}
         className="w-6 h-6 rounded flex items-center justify-center text-slate-500 hover:bg-slate-100 border border-[#E2E8F0] text-sm font-bold leading-none"
-        style={{ fontFamily: "Space Grotesk, sans-serif" }}
+        style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
       >
         −
       </button>
@@ -60,7 +60,7 @@ function Stepper({
       <button
         onClick={() => onChange(value + 1)}
         className="w-6 h-6 rounded flex items-center justify-center text-slate-500 hover:bg-slate-100 border border-[#E2E8F0] text-sm font-bold leading-none"
-        style={{ fontFamily: "Space Grotesk, sans-serif" }}
+        style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
       >
         +
       </button>
@@ -105,7 +105,7 @@ function MetricRow({
     <div className="flex items-center justify-between py-2 border-b border-[#E2E8F0] last:border-0">
       <span
         className="text-xs text-slate-500"
-        style={{ fontFamily: "Space Grotesk, sans-serif" }}
+        style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
       >
         {label}
       </span>
@@ -132,7 +132,7 @@ function BooleanToggle({
       onClick={() => onChange(!value)}
       className="px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-200"
       style={{
-        fontFamily: "Space Grotesk, sans-serif",
+        fontFamily: "Nunito, system-ui, sans-serif",
         backgroundColor: value ? color + "22" : "#F1F5F9",
         borderColor: value ? color : "#E2E8F0",
         color: value ? color : "#94A3B8",
@@ -143,12 +143,38 @@ function BooleanToggle({
   );
 }
 
+type LastWeek = {
+  hc_outreach_this_week: number;
+  rh_outreach_this_week: number;
+  b2c_content_this_week: number;
+  b2c_waitlist_signups: number;
+  b2c_referral_channels: number;
+  week_start_date: string;
+} | null;
+
+function Delta({ current, prev }: { current: number; prev: number | undefined }) {
+  if (prev === undefined) return null;
+  const diff = current - prev;
+  const color = diff > 0 ? "#34D399" : diff < 0 ? "#F87171" : "#94A3B8";
+  const sign = diff > 0 ? "+" : "";
+  return (
+    <span
+      className="ml-2 text-[10px]"
+      style={{ color, fontFamily: "JetBrains Mono, monospace" }}
+      title={`Last week: ${prev}`}
+    >
+      last wk {prev} ({sign}{diff})
+    </span>
+  );
+}
+
 export default function CommandCenter({ clients }: CommandCenterProps) {
   const [metrics, setMetrics] = useState<Omit<OsMetrics, "id" | "updated_at">>(defaultMetrics);
   const [metricsId, setMetricsId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [lastWeek, setLastWeek] = useState<LastWeek>(null);
 
   // Derived from clients
   const hcClients = clients.filter((c) => c.type === "Homecare");
@@ -191,9 +217,22 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
     setLoading(false);
   }, []);
 
+  const fetchLastWeek = useCallback(async () => {
+    const { data } = await supabase
+      .from("os_metrics_history")
+      .select(
+        "hc_outreach_this_week, rh_outreach_this_week, b2c_content_this_week, b2c_waitlist_signups, b2c_referral_channels, week_start_date"
+      )
+      .order("week_start_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) setLastWeek(data as LastWeek);
+  }, []);
+
   useEffect(() => {
     fetchMetrics();
-  }, [fetchMetrics]);
+    fetchLastWeek();
+  }, [fetchMetrics, fetchLastWeek]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -226,7 +265,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
     return (
       <div
         className="flex items-center justify-center h-64 text-slate-400 text-sm"
-        style={{ fontFamily: "Space Grotesk, sans-serif", background: "#F8FAFC" }}
+        style={{ fontFamily: "Nunito, system-ui, sans-serif", background: "#F8FAFC" }}
       >
         Loading metrics…
       </div>
@@ -235,44 +274,79 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
 
   return (
     <div
-      className="min-h-screen p-6"
-      style={{ background: "#F8FAFC", fontFamily: "Space Grotesk, sans-serif" }}
+      className="min-h-screen"
+      style={{
+        background:
+          "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(46,85,181,0.08), transparent 60%), #F8FAFC",
+        fontFamily: "Nunito, system-ui, sans-serif",
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 max-w-[1400px] mx-auto">
+      {/* Hero */}
+      <div
+        className="rounded-2xl border bg-white p-6 mb-6 flex items-center justify-between"
+        style={{
+          borderColor: "#E2E8F0",
+          boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(46,85,181,0.06)",
+        }}
+      >
         <div>
+          <div
+            className="text-[10px] font-bold tracking-[0.22em] uppercase mb-2"
+            style={{ color: "#2E55B5" }}
+          >
+            Operating Scorecard
+          </div>
           <h1
-            className="text-2xl font-bold text-slate-900 tracking-tight"
-            style={{ fontFamily: "Syne, sans-serif" }}
+            className="text-4xl tracking-tight"
+            style={{
+              fontFamily: "Nunito, system-ui, sans-serif",
+              fontWeight: 900,
+              color: "#0F172A",
+              letterSpacing: "-0.025em",
+              lineHeight: 1.05,
+            }}
           >
             Command Center
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Stride Operating Scorecard — live client data + manual metrics
+          <p
+            className="text-sm text-slate-500 mt-2"
+            style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
+          >
+            Live CRM data, weekly outreach metrics, and quarterly targets at a glance.
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm"
-          style={{
-            fontFamily: "Space Grotesk, sans-serif",
-            backgroundColor: saved ? "#34D399" : "#00E5CC",
-            color: "#0E1117",
-          }}
-        >
-          <Save size={14} />
-          {saving ? "Saving…" : saved ? "Saved!" : "Save Metrics"}
-        </button>
+        <div className="flex flex-col items-end gap-3 shrink-0 ml-8">
+          <img
+            src="/stride-logo.png"
+            alt="Stride"
+            className="h-16 w-auto select-none"
+            draggable={false}
+          />
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+            style={{
+              fontFamily: "Nunito, system-ui, sans-serif",
+              backgroundColor: saved ? "#34D399" : "#2E55B5",
+              color: "#FFFFFF",
+              boxShadow: "0 4px 12px rgba(46,85,181,0.25)",
+            }}
+          >
+            <Save size={14} />
+            {saving ? "Saving…" : saved ? "Saved!" : "Save Metrics"}
+          </button>
+        </div>
       </div>
 
       {/* Summary Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {/* Total B2B Accounts */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
             <Users size={14} className="text-slate-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
               Total B2B Accounts
             </span>
           </div>
@@ -286,10 +360,10 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
         </div>
 
         {/* Pilot Proposals Sent */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
             <Building2 size={14} className="text-slate-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
               Pilot Proposals Sent
             </span>
           </div>
@@ -306,10 +380,10 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
         </div>
 
         {/* Content Published Total */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
             <Heart size={14} className="text-slate-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
               Content Published
             </span>
           </div>
@@ -326,10 +400,10 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
         </div>
 
         {/* Framework Status */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
             <Save size={14} className="text-slate-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            <span className="text-xs text-slate-400 uppercase tracking-wide" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
               Framework Status
             </span>
           </div>
@@ -356,16 +430,16 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* ─── Homecare Card ─── */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden transition-shadow hover:shadow-md">
           <div
             className="px-5 py-4 flex items-center gap-3"
-            style={{ background: "#00E5CC18", borderBottom: "1px solid #E2E8F0" }}
+            style={{ background: "#2E55B518", borderBottom: "1px solid #E2E8F0" }}
           >
-            <Heart size={18} style={{ color: "#00E5CC" }} />
+            <Heart size={18} style={{ color: "#2E55B5" }} />
             <div>
               <h2
                 className="text-base font-bold text-slate-900"
-                style={{ fontFamily: "Syne, sans-serif" }}
+                style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 Homecare
               </h2>
@@ -377,7 +451,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
               <div className="flex items-center gap-2">
                 <span
                   className="text-sm font-bold"
-                  style={{ fontFamily: "JetBrains Mono, monospace", color: "#00E5CC" }}
+                  style={{ fontFamily: "JetBrains Mono, monospace", color: "#2E55B5" }}
                 >
                   {hcSigned}
                 </span>
@@ -389,7 +463,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
               <div className="flex items-center gap-2">
                 <span
                   className="text-sm font-bold"
-                  style={{ fontFamily: "JetBrains Mono, monospace", color: "#00E5CC" }}
+                  style={{ fontFamily: "JetBrains Mono, monospace", color: "#2E55B5" }}
                 >
                   {hcActiveConvos}
                 </span>
@@ -407,34 +481,37 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </MetricRow>
 
             <MetricRow label="Outreach this week">
-              <Stepper
-                value={metrics.hc_outreach_this_week}
-                onChange={(v) => set("hc_outreach_this_week", v)}
-              />
+              <div className="flex items-center">
+                <Stepper
+                  value={metrics.hc_outreach_this_week}
+                  onChange={(v) => set("hc_outreach_this_week", v)}
+                />
+                <Delta current={metrics.hc_outreach_this_week} prev={lastWeek?.hc_outreach_this_week} />
+              </div>
             </MetricRow>
 
             <div className="pt-3">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Outreach target (10/week)
               </div>
               <ProgressBar
                 value={metrics.hc_outreach_this_week}
                 target={10}
-                color="#00E5CC"
+                color="#2E55B5"
               />
             </div>
 
             <div className="pt-3 pb-1">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Trial agreement progress (45 total)
               </div>
-              <ProgressBar value={hcSigned} target={45} color="#00E5CC" />
+              <ProgressBar value={hcSigned} target={45} color="#2E55B5" />
             </div>
           </div>
         </div>
 
         {/* ─── Retirement Homes Card ─── */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden transition-shadow hover:shadow-md">
           <div
             className="px-5 py-4 flex items-center gap-3"
             style={{ background: "#8B5CF618", borderBottom: "1px solid #E2E8F0" }}
@@ -443,7 +520,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             <div>
               <h2
                 className="text-base font-bold text-slate-900"
-                style={{ fontFamily: "Syne, sans-serif" }}
+                style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 Retirement Homes
               </h2>
@@ -473,10 +550,13 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </MetricRow>
 
             <MetricRow label="Outreach this week">
-              <Stepper
-                value={metrics.rh_outreach_this_week}
-                onChange={(v) => set("rh_outreach_this_week", v)}
-              />
+              <div className="flex items-center">
+                <Stepper
+                  value={metrics.rh_outreach_this_week}
+                  onChange={(v) => set("rh_outreach_this_week", v)}
+                />
+                <Delta current={metrics.rh_outreach_this_week} prev={lastWeek?.rh_outreach_this_week} />
+              </div>
             </MetricRow>
 
             <MetricRow label="Go/No-Go Decision">
@@ -490,7 +570,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </MetricRow>
 
             <div className="pt-3">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Outreach target (5/week)
               </div>
               <ProgressBar
@@ -501,7 +581,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </div>
 
             <div className="pt-3 pb-1">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Discovery calls progress (8 target)
               </div>
               <ProgressBar value={rhDiscovery} target={8} color="#8B5CF6" />
@@ -510,7 +590,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
         </div>
 
         {/* ─── B2C Older Adults Card ─── */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden transition-shadow hover:shadow-md">
           <div
             className="px-5 py-4 flex items-center gap-3"
             style={{ background: "#F59E0B18", borderBottom: "1px solid #E2E8F0" }}
@@ -519,7 +599,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             <div>
               <h2
                 className="text-base font-bold text-slate-900"
-                style={{ fontFamily: "Syne, sans-serif" }}
+                style={{ fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 B2C Older Adults
               </h2>
@@ -535,7 +615,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </MetricRow>
 
             <div className="py-2 border-b border-[#E2E8F0]">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Waitlist progress (target 1,000)
               </div>
               <ProgressBar
@@ -546,14 +626,17 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </div>
 
             <MetricRow label="Content this week">
-              <Stepper
-                value={metrics.b2c_content_this_week}
-                onChange={(v) => set("b2c_content_this_week", v)}
-              />
+              <div className="flex items-center">
+                <Stepper
+                  value={metrics.b2c_content_this_week}
+                  onChange={(v) => set("b2c_content_this_week", v)}
+                />
+                <Delta current={metrics.b2c_content_this_week} prev={lastWeek?.b2c_content_this_week} />
+              </div>
             </MetricRow>
 
             <div className="py-2 border-b border-[#E2E8F0]">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Content target (2/week)
               </div>
               <ProgressBar
@@ -571,7 +654,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
             </MetricRow>
 
             <div className="pt-3 pb-1">
-              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Referral channel target (3)
               </div>
               <ProgressBar
@@ -584,6 +667,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
         </div>
 
       </div>
+    </div>
     </div>
   );
 }
