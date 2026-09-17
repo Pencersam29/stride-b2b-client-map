@@ -256,6 +256,9 @@ export default function BulkImportModal({ isOpen, onClose, onImport }: BulkImpor
         notesLog: [],
         lastContactedDate: null,
         nextFollowUpDate: null,
+        contractedClientCount: null,
+        contractPriceMonthly: null,
+        contractCurrency: null,
       });
     }
 

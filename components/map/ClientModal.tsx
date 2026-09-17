@@ -6,6 +6,7 @@ import {
   ClientType,
   LeadTemperature,
   LEAD_SOURCES,
+  CURRENCIES,
   NoteEntry,
 } from "@/types/client";
 import { supabase } from "@/lib/supabase";
@@ -47,6 +48,9 @@ interface FormData {
   lastContactedDate: string;
   nextFollowUpDate: string;
   newNoteText: string;
+  contractedClientCount: string;
+  contractPriceMonthly: string;
+  contractCurrency: string;
 }
 
 const defaultForm: FormData = {
@@ -67,6 +71,9 @@ const defaultForm: FormData = {
   lastContactedDate: "",
   nextFollowUpDate: "",
   newNoteText: "",
+  contractedClientCount: "",
+  contractPriceMonthly: "",
+  contractCurrency: "USD",
 };
 
 async function geocodeAddress(
@@ -127,6 +134,15 @@ export default function ClientModal({
           lastContactedDate: editClient.lastContactedDate ?? "",
           nextFollowUpDate: editClient.nextFollowUpDate ?? "",
           newNoteText: "",
+          contractedClientCount:
+            editClient.contractedClientCount != null
+              ? String(editClient.contractedClientCount)
+              : "",
+          contractPriceMonthly:
+            editClient.contractPriceMonthly != null
+              ? String(editClient.contractPriceMonthly)
+              : "",
+          contractCurrency: editClient.contractCurrency ?? "USD",
         });
       } else {
         setForm(defaultForm);
@@ -184,7 +200,13 @@ export default function ClientModal({
         ]
       : existingNotesLog;
 
-    const { newNoteText, ...formRest } = form;
+    const {
+      newNoteText,
+      contractedClientCount,
+      contractPriceMonthly,
+      contractCurrency,
+      ...formRest
+    } = form;
 
     try {
       await onSave({
@@ -192,6 +214,13 @@ export default function ClientModal({
         notesLog,
         lastContactedDate: form.lastContactedDate || null,
         nextFollowUpDate: form.nextFollowUpDate || null,
+        contractedClientCount: contractedClientCount.trim()
+          ? Number(contractedClientCount)
+          : null,
+        contractPriceMonthly: contractPriceMonthly.trim()
+          ? Number(contractPriceMonthly)
+          : null,
+        contractCurrency: contractCurrency || null,
         lat: coords.lat,
         lng: coords.lng,
       });
@@ -538,6 +567,64 @@ export default function ClientModal({
                   {editClient.notesLog.length} previous {editClient.notesLog.length === 1 ? "entry" : "entries"} — this adds a new timestamped entry to the log.
                 </p>
               )}
+            </div>
+
+            <div className="col-span-2 pt-2" style={{ borderTop: "1px solid #E2E8F0" }}>
+              <p
+                className="text-xs font-semibold mb-3 mt-1"
+                style={{ color: "#475569", fontFamily: "Nunito, system-ui, sans-serif" }}
+              >
+                Contract Terms (for Signed accounts)
+              </p>
+            </div>
+
+            <div>
+              <FormField label="Clients Agreed To">
+                <input
+                  type="number"
+                  min="0"
+                  value={form.contractedClientCount}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, contractedClientCount: e.target.value }))
+                  }
+                  placeholder="e.g. 200"
+                  className="form-input"
+                />
+              </FormField>
+            </div>
+
+            <div>
+              <FormField label="Price / Client / Month">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.contractPriceMonthly}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, contractPriceMonthly: e.target.value }))
+                  }
+                  placeholder="e.g. 8.00"
+                  className="form-input"
+                />
+              </FormField>
+            </div>
+
+            <div>
+              <FormField label="Currency">
+                <select
+                  value={form.contractCurrency}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, contractCurrency: e.target.value }))
+                  }
+                  className="form-input"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
             </div>
           </div>
 

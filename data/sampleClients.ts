@@ -2,7 +2,16 @@ import { Client } from "@/types/client";
 
 const RAW_SAMPLE_CLIENTS: Omit<
   Client,
-  "phoneCell" | "phoneWork" | "leadTemperature" | "leadSource" | "notesLog" | "lastContactedDate" | "nextFollowUpDate"
+  | "phoneCell"
+  | "phoneWork"
+  | "leadTemperature"
+  | "leadSource"
+  | "notesLog"
+  | "lastContactedDate"
+  | "nextFollowUpDate"
+  | "contractedClientCount"
+  | "contractPriceMonthly"
+  | "contractCurrency"
 >[] = [
   {
     id: "1",
@@ -175,4 +184,7 @@ export const SAMPLE_CLIENTS: Client[] = RAW_SAMPLE_CLIENTS.map((c) => ({
   notesLog: [],
   lastContactedDate: null,
   nextFollowUpDate: null,
+  contractedClientCount: null,
+  contractPriceMonthly: null,
+  contractCurrency: null,
 }));

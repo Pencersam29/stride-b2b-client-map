@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Heart, Building2, PhoneCall, Snowflake, Flame } from "lucide-react";
+import { Heart, Building2, PhoneCall, Snowflake, Flame, Users, TrendingUp } from "lucide-react";
 import {
   Client,
   ClientStatus,
@@ -8,6 +8,8 @@ import {
   STATUS_COLORS,
   isOverdue,
   isDueTodayOrOverdue,
+  computePortfolioStats,
+  formatMoney,
 } from "@/types/client";
 import ClientPopover from "./ClientPopover";
 
@@ -22,7 +24,6 @@ interface PipelineBoardProps {
 
 const COLUMNS: ClientStatus[] = [
   "Signed",
-  "In Pipeline",
   "Interested in Trial",
   "Prospect",
   "Not Interested",
@@ -86,8 +87,85 @@ export default function PipelineBoard({
     return map;
   }, [filtered]);
 
+  const stats = useMemo(() => computePortfolioStats(clients), [clients]);
+  const arrEntries = Object.entries(stats.arrByCurrency);
+
   return (
     <div className="min-h-full flex flex-col">
+      {/* Stat bar */}
+      <div className="grid grid-cols-3 gap-4 px-6 pt-6">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Building2 size={13} style={{ color: "#94A3B8" }} />
+            <span
+              className="text-xs uppercase tracking-wide"
+              style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
+            >
+              Businesses Signed
+            </span>
+          </div>
+          <div
+            className="text-2xl font-bold"
+            style={{ color: "#0F172A", fontFamily: "'JetBrains Mono', monospace" }}
+          >
+            {stats.businessesSigned}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Users size={13} style={{ color: "#94A3B8" }} />
+            <span
+              className="text-xs uppercase tracking-wide"
+              style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
+            >
+              Total Clients
+            </span>
+          </div>
+          <div
+            className="text-2xl font-bold"
+            style={{ color: "#0F172A", fontFamily: "'JetBrains Mono', monospace" }}
+          >
+            {stats.totalClients.toLocaleString()}
+          </div>
+          <div className="text-xs mt-0.5" style={{ color: "#CBD5E1" }}>
+            across signed accounts
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+          <div className="flex items-center gap-2 mb-1.5">
+            <TrendingUp size={13} style={{ color: "#94A3B8" }} />
+            <span
+              className="text-xs uppercase tracking-wide"
+              style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
+            >
+              ARR
+            </span>
+          </div>
+          {arrEntries.length === 0 ? (
+            <div
+              className="text-2xl font-bold"
+              style={{ color: "#0F172A", fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              $0
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+              {arrEntries.map(([currency, amount]) => (
+                <span
+                  key={currency}
+                  className="text-2xl font-bold"
+                  style={{ color: "#0F172A", fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  {formatMoney(amount, currency)}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Follow-up banner */}
       {dueToday.length > 0 && (
         <div
@@ -421,6 +499,22 @@ function PipelineCard({
           Last contact: {formatDate(client.lastContactedDate)}
         </div>
       )}
+
+      {client.status === "Signed" &&
+        client.contractedClientCount != null &&
+        client.contractPriceMonthly != null && (
+          <div
+            className="text-[10px] mt-1.5 pt-1.5"
+            style={{
+              color: "#34D399",
+              fontFamily: "'JetBrains Mono', monospace",
+              borderTop: "1px dashed #E2E8F0",
+            }}
+          >
+            {client.contractedClientCount.toLocaleString()} clients ·{" "}
+            {formatMoney(client.contractPriceMonthly, client.contractCurrency || "USD")}/mo
+          </div>
+        )}
     </button>
   );
 }

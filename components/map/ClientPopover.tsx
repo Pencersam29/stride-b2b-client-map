@@ -15,7 +15,15 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { Client, ClientStatus, STATUS_COLORS, isOverdue } from "@/types/client";
+import {
+  Client,
+  ClientStatus,
+  STATUS_COLORS,
+  isOverdue,
+  clientARR,
+  formatMoney,
+} from "@/types/client";
+import { DollarSign, Users } from "lucide-react";
 
 interface ClientPopoverProps {
   client: Client;
@@ -223,6 +231,43 @@ export default function ClientPopover({
           })}
         </div>
       </div>
+
+      {/* Contract terms (Signed accounts) */}
+      {client.status === "Signed" &&
+        (client.contractedClientCount != null || client.contractPriceMonthly != null) && (
+          <div
+            className="px-4 py-3"
+            style={{ borderTop: "1px solid #1E2533" }}
+          >
+            <p
+              className="text-xs mb-2"
+              style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
+            >
+              Contract
+            </p>
+            <div className="space-y-2">
+              {client.contractedClientCount != null && (
+                <InfoRow icon={<Users size={12} />} label="Clients Agreed To">
+                  {client.contractedClientCount.toLocaleString()}
+                </InfoRow>
+              )}
+              {client.contractPriceMonthly != null && (
+                <InfoRow icon={<DollarSign size={12} />} label="Price">
+                  {formatMoney(client.contractPriceMonthly, client.contractCurrency || "USD")}
+                  {" "}
+                  / client / month
+                </InfoRow>
+              )}
+              {clientARR(client) != null && (
+                <InfoRow icon={<DollarSign size={12} />} label="ARR">
+                  <span style={{ color: "#34D399", fontWeight: 600 }}>
+                    {formatMoney(clientARR(client)!, client.contractCurrency || "USD")}
+                  </span>
+                </InfoRow>
+              )}
+            </div>
+          </div>
+        )}
 
       {/* Notes */}
       {client.notes && (

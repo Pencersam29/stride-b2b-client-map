@@ -7,7 +7,6 @@ import Sidebar from "@/components/map/Sidebar";
 import MapView from "@/components/map/MapView";
 import StatusLegend from "@/components/map/StatusLegend";
 import ClientModal from "@/components/map/ClientModal";
-import CommandCenter from "@/components/map/CommandCenter";
 import CallsThisWeek from "@/components/map/CallsThisWeek";
 import PipelineBoard from "@/components/map/PipelineBoard";
 import BulkImportModal from "@/components/map/BulkImportModal";
@@ -35,6 +34,9 @@ function dbRowToClient(row: Record<string, unknown>): Client {
     notesLog: Array.isArray(row.notes_log) ? (row.notes_log as NoteEntry[]) : [],
     lastContactedDate: (row.last_contacted_date as string) ?? null,
     nextFollowUpDate: (row.next_follow_up_date as string) ?? null,
+    contractedClientCount: (row.contracted_client_count as number) ?? null,
+    contractPriceMonthly: (row.contract_price_monthly as number) ?? null,
+    contractCurrency: (row.contract_currency as string) ?? null,
   };
 }
 
@@ -59,6 +61,9 @@ function clientToDbRow(data: Omit<Client, "id" | "createdAt">) {
     notes_log: data.notesLog ?? [],
     last_contacted_date: data.lastContactedDate || null,
     next_follow_up_date: data.nextFollowUpDate || null,
+    contracted_client_count: data.contractedClientCount ?? null,
+    contract_price_monthly: data.contractPriceMonthly ?? null,
+    contract_currency: data.contractCurrency || null,
   };
 }
 
@@ -78,9 +83,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
-  const [activeView, setActiveView] = useState<"map" | "pipeline" | "command">(
-    "pipeline"
-  );
+  const [activeView, setActiveView] = useState<"map" | "pipeline">("pipeline");
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   // Load clients from Supabase on mount
@@ -232,14 +235,7 @@ export default function Home() {
         onSearchSelect={handleSearchSelect}
       />
 
-      {activeView === "command" ? (
-        <div
-          className="fixed bottom-0"
-          style={{ top: "56px", left: 0, right: 0 }}
-        >
-          <CommandCenter clients={clients} />
-        </div>
-      ) : activeView === "pipeline" ? (
+      {activeView === "pipeline" ? (
         <div
           className="fixed bottom-0 overflow-y-auto"
           style={{ top: "56px", left: 0, right: 0, background: "#F8FAFC" }}

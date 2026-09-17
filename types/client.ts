@@ -23,6 +23,9 @@ export const LEAD_SOURCES = [
 
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
+export const CURRENCIES = ["USD", "CAD", "EUR", "GBP", "AUD"] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
 export interface NoteEntry {
   timestamp: string; // ISO 8601
   text: string;
@@ -50,6 +53,54 @@ export interface Client {
   notesLog: NoteEntry[];
   lastContactedDate: string | null;
   nextFollowUpDate: string | null;
+  contractedClientCount: number | null;
+  contractPriceMonthly: number | null;
+  contractCurrency: string | null;
+}
+
+// Annual contract value for one Signed account: monthly per-client price x
+// client count x 12. Null when the account isn't Signed or terms aren't set.
+export function clientARR(client: Client): number | null {
+  if (client.status !== "Signed") return null;
+  if (!client.contractPriceMonthly || !client.contractedClientCount) return null;
+  return client.contractPriceMonthly * client.contractedClientCount * 12;
+}
+
+export interface PortfolioStats {
+  businessesSigned: number;
+  totalClients: number;
+  arrByCurrency: Record<string, number>;
+}
+
+// ARR is summed per currency rather than converted, since mixing FX rates
+// without a live conversion source would misrepresent the numbers.
+export function computePortfolioStats(clients: Client[]): PortfolioStats {
+  const signed = clients.filter((c) => c.status === "Signed");
+  const arrByCurrency: Record<string, number> = {};
+  let totalClients = 0;
+
+  for (const c of signed) {
+    totalClients += c.contractedClientCount ?? 0;
+    const arr = clientARR(c);
+    if (arr) {
+      const currency = c.contractCurrency || "USD";
+      arrByCurrency[currency] = (arrByCurrency[currency] ?? 0) + arr;
+    }
+  }
+
+  return { businessesSigned: signed.length, totalClients, arrByCurrency };
+}
+
+export function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString()} ${currency}`;
+  }
 }
 
 function startOfToday(): number {

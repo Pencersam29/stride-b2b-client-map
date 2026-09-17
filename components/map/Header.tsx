@@ -1,4 +1,4 @@
-import { Search, Plus, X, Heart, Building2, Map, LayoutDashboard, Columns3, UploadCloud } from "lucide-react";
+import { Search, Plus, X, Heart, Building2, Map, Columns3, UploadCloud } from "lucide-react";
 import { Client, ClientStatus, ClientType, STATUS_COLORS } from "@/types/client";
 
 interface HeaderProps {
@@ -12,8 +12,8 @@ interface HeaderProps {
   onAddClient: () => void;
   onBulkImport: () => void;
   onSearchSelect: (client: Client) => void;
-  activeView: "map" | "pipeline" | "command";
-  onViewChange: (view: "map" | "pipeline" | "command") => void;
+  activeView: "map" | "pipeline";
+  onViewChange: (view: "map" | "pipeline") => void;
 }
 
 const STATUSES: ClientStatus[] = [
@@ -74,11 +74,7 @@ export default function Header({
               className="text-[10px] font-medium tracking-[0.14em] uppercase mt-0.5"
               style={{ fontFamily: "Nunito, system-ui, sans-serif", color: "#94A3B8" }}
             >
-              {activeView === "command"
-                ? "Command"
-                : activeView === "pipeline"
-                ? "Pipeline"
-                : "Client Map"}
+              {activeView === "pipeline" ? "Pipeline" : "Client Map"}
             </span>
           </div>
         </div>
@@ -91,22 +87,10 @@ export default function Header({
             border: "1px solid #E2E8F0",
           }}
         >
-          {(["map", "pipeline", "command"] as const).map((view) => {
+          {(["map", "pipeline"] as const).map((view) => {
             const isActive = activeView === view;
-            const icon =
-              view === "map" ? (
-                <Map size={12} />
-              ) : view === "pipeline" ? (
-                <Columns3 size={12} />
-              ) : (
-                <LayoutDashboard size={12} />
-              );
-            const label =
-              view === "map"
-                ? "Map View"
-                : view === "pipeline"
-                ? "Pipeline"
-                : "Command Center";
+            const icon = view === "map" ? <Map size={12} /> : <Columns3 size={12} />;
+            const label = view === "map" ? "Map View" : "Pipeline";
             return (
               <button
                 key={view}
@@ -127,10 +111,7 @@ export default function Header({
         </div>
 
         {/* Divider */}
-        <div
-          className="w-px h-6 shrink-0"
-          style={{ background: "#E2E8F0", display: activeView === "command" ? "none" : undefined }}
-        />
+        <div className="w-px h-6 shrink-0" style={{ background: "#E2E8F0" }} />
 
         {activeView === "map" && (
           <>
@@ -284,39 +265,37 @@ export default function Header({
           </>
         )}
 
-        {activeView !== "command" && (
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
-            {/* Bulk Import */}
-            <button
-              onClick={onBulkImport}
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium shrink-0 transition-all hover:brightness-95 active:scale-95"
-              style={{
-                background: "#F8FAFC",
-                border: "1px solid #E2E8F0",
-                color: "#475569",
-                fontFamily: "Nunito, system-ui, sans-serif",
-              }}
-            >
-              <UploadCloud size={14} />
-              Bulk Import
-            </button>
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
+          {/* Bulk Import */}
+          <button
+            onClick={onBulkImport}
+            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium shrink-0 transition-all hover:brightness-95 active:scale-95"
+            style={{
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              color: "#475569",
+              fontFamily: "Nunito, system-ui, sans-serif",
+            }}
+          >
+            <UploadCloud size={14} />
+            Bulk Import
+          </button>
 
-            {/* Add Client CTA */}
-            <button
-              onClick={onAddClient}
-              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold shrink-0 transition-all hover:brightness-110 active:scale-95"
-              style={{
-                background: "#2E55B5",
-                color: "#FFFFFF",
-                fontFamily: "Nunito, system-ui, sans-serif",
-                boxShadow: "0 0 16px rgba(46,85,181,0.35)",
-              }}
-            >
-              <Plus size={14} />
-              Add Client
-            </button>
-          </div>
-        )}
+          {/* Add Client CTA */}
+          <button
+            onClick={onAddClient}
+            className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold shrink-0 transition-all hover:brightness-110 active:scale-95"
+            style={{
+              background: "#2E55B5",
+              color: "#FFFFFF",
+              fontFamily: "Nunito, system-ui, sans-serif",
+              boxShadow: "0 0 16px rgba(46,85,181,0.35)",
+            }}
+          >
+            <Plus size={14} />
+            Add Client
+          </button>
+        </div>
       </div>
     </header>
   );

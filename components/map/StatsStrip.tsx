@@ -1,4 +1,4 @@
-import { Client, ClientType, STATUS_COLORS } from "@/types/client";
+import { Client, ClientType, STATUS_COLORS, computePortfolioStats, formatMoney } from "@/types/client";
 import { Heart, Building2 } from "lucide-react";
 
 interface StatsStripProps {
@@ -14,16 +14,25 @@ export default function StatsStrip({ clients, typeFilter }: StatsStripProps) {
 
   const total = scoped.length;
   const interestedInTrial = scoped.filter((c) => c.status === "Interested in Trial").length;
-  const signed = scoped.filter((c) => c.status === "Signed").length;
   const inPipeline = scoped.filter((c) => c.status === "In Pipeline").length;
   const prospects = scoped.filter((c) => c.status === "Prospect").length;
+
+  const portfolio = computePortfolioStats(scoped);
+  const arrLabel =
+    Object.entries(portfolio.arrByCurrency).length === 0
+      ? "$0"
+      : Object.entries(portfolio.arrByCurrency)
+          .map(([currency, amount]) => formatMoney(amount, currency))
+          .join(" + ");
 
   const stats = [
     { label: typeFilter ? typeFilter : "Total Accounts", value: total, color: "#2E55B5" },
     { label: "Interested in Trial", value: interestedInTrial, color: STATUS_COLORS["Interested in Trial"] },
-    { label: "Signed", value: signed, color: STATUS_COLORS["Signed"] },
+    { label: "Businesses Signed", value: portfolio.businessesSigned, color: STATUS_COLORS["Signed"] },
     { label: "In Pipeline", value: inPipeline, color: STATUS_COLORS["In Pipeline"] },
     { label: "Prospects", value: prospects, color: STATUS_COLORS["Prospect"] },
+    { label: "Total Clients", value: portfolio.totalClients, color: "#2E55B5" },
+    { label: "ARR", value: arrLabel, color: "#34D399" },
   ];
 
   return (
