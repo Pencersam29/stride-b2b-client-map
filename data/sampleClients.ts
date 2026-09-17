@@ -1,6 +1,9 @@
 import { Client } from "@/types/client";
 
-export const SAMPLE_CLIENTS: Client[] = [
+const RAW_SAMPLE_CLIENTS: Omit<
+  Client,
+  "phoneCell" | "phoneWork" | "leadTemperature" | "leadSource" | "notesLog" | "lastContactedDate" | "nextFollowUpDate"
+>[] = [
   {
     id: "1",
     name: "Maple Grove Homecare",
@@ -162,3 +165,14 @@ export const SAMPLE_CLIENTS: Client[] = [
     createdAt: Date.now() - 86400000 * 18,
   },
 ];
+
+export const SAMPLE_CLIENTS: Client[] = RAW_SAMPLE_CLIENTS.map((c) => ({
+  ...c,
+  phoneCell: "",
+  phoneWork: "",
+  leadTemperature: "Warm",
+  leadSource: "",
+  notesLog: [],
+  lastContactedDate: null,
+  nextFollowUpDate: null,
+}));

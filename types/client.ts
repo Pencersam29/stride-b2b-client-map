@@ -8,6 +8,26 @@ export type ClientStatus =
 
 export type ClientType = "Homecare" | "Retirement Home";
 
+export type LeadTemperature = "Warm" | "Cold";
+
+export const LEAD_SOURCES = [
+  "Referral",
+  "LinkedIn",
+  "Cold Email",
+  "Cold Call",
+  "Conference/Event",
+  "Inbound",
+  "Existing Relationship",
+  "Other",
+] as const;
+
+export type LeadSource = (typeof LEAD_SOURCES)[number];
+
+export interface NoteEntry {
+  timestamp: string; // ISO 8601
+  text: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -25,6 +45,31 @@ export interface Client {
   lat: number;
   lng: number;
   createdAt: number;
+  leadTemperature: LeadTemperature;
+  leadSource: string;
+  notesLog: NoteEntry[];
+  lastContactedDate: string | null;
+  nextFollowUpDate: string | null;
+}
+
+function startOfToday(): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.getTime();
+}
+
+// Strictly in the past (for the red overdue badge/dot).
+export function isOverdue(nextFollowUpDate: string | null): boolean {
+  if (!nextFollowUpDate) return false;
+  const due = new Date(nextFollowUpDate + "T00:00:00");
+  return due.getTime() < startOfToday();
+}
+
+// Today or in the past (for the "Follow up today" quick filter).
+export function isDueTodayOrOverdue(nextFollowUpDate: string | null): boolean {
+  if (!nextFollowUpDate) return false;
+  const due = new Date(nextFollowUpDate + "T00:00:00");
+  return due.getTime() <= startOfToday();
 }
 
 export const STATUS_COLORS: Record<ClientStatus, string> = {

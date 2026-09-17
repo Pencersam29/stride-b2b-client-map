@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { X, Loader2, AlertCircle } from "lucide-react";
-import { Client, ClientStatus, ClientType } from "@/types/client";
+import {
+  Client,
+  ClientStatus,
+  ClientType,
+  LeadTemperature,
+  LEAD_SOURCES,
+  NoteEntry,
+} from "@/types/client";
 import { supabase } from "@/lib/supabase";
 
 interface ClientModalProps {
@@ -20,6 +27,7 @@ const STATUSES: ClientStatus[] = [
 ];
 
 const CLIENT_TYPES: ClientType[] = ["Homecare", "Retirement Home"];
+const LEAD_TEMPERATURES: LeadTemperature[] = ["Warm", "Cold"];
 
 interface FormData {
   name: string;
@@ -34,6 +42,11 @@ interface FormData {
   phoneWork: string;
   status: ClientStatus;
   notes: string;
+  leadTemperature: LeadTemperature;
+  leadSource: string;
+  lastContactedDate: string;
+  nextFollowUpDate: string;
+  newNoteText: string;
 }
 
 const defaultForm: FormData = {
@@ -49,6 +62,11 @@ const defaultForm: FormData = {
   phoneWork: "",
   status: "Prospect",
   notes: "",
+  leadTemperature: "Warm",
+  leadSource: "",
+  lastContactedDate: "",
+  nextFollowUpDate: "",
+  newNoteText: "",
 };
 
 async function geocodeAddress(
@@ -104,6 +122,11 @@ export default function ClientModal({
           phoneWork: editClient.phoneWork ?? "",
           status: editClient.status,
           notes: editClient.notes,
+          leadTemperature: editClient.leadTemperature ?? "Warm",
+          leadSource: editClient.leadSource ?? "",
+          lastContactedDate: editClient.lastContactedDate ?? "",
+          nextFollowUpDate: editClient.nextFollowUpDate ?? "",
+          newNoteText: "",
         });
       } else {
         setForm(defaultForm);
@@ -153,8 +176,25 @@ export default function ClientModal({
       return;
     }
 
+    const existingNotesLog: NoteEntry[] = editClient?.notesLog ?? [];
+    const notesLog: NoteEntry[] = form.newNoteText.trim()
+      ? [
+          ...existingNotesLog,
+          { timestamp: new Date().toISOString(), text: form.newNoteText.trim() },
+        ]
+      : existingNotesLog;
+
+    const { newNoteText, ...formRest } = form;
+
     try {
-      await onSave({ ...form, lat: coords.lat, lng: coords.lng });
+      await onSave({
+        ...formRest,
+        notesLog,
+        lastContactedDate: form.lastContactedDate || null,
+        nextFollowUpDate: form.nextFollowUpDate || null,
+        lat: coords.lat,
+        lng: coords.lng,
+      });
       setIsLoading(false);
       onClose();
     } catch (err) {
@@ -410,6 +450,94 @@ export default function ClientModal({
                   className="form-input resize-none"
                 />
               </FormField>
+            </div>
+
+            <div>
+              <FormField label="Lead Temperature">
+                <select
+                  value={form.leadTemperature}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      leadTemperature: e.target.value as LeadTemperature,
+                    }))
+                  }
+                  className="form-input"
+                >
+                  {LEAD_TEMPERATURES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+
+            <div>
+              <FormField label="Lead Source">
+                <select
+                  value={form.leadSource}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, leadSource: e.target.value }))
+                  }
+                  className="form-input"
+                >
+                  <option value="">Select source…</option>
+                  {LEAD_SOURCES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+
+            <div>
+              <FormField label="Last Contacted Date">
+                <input
+                  type="date"
+                  value={form.lastContactedDate}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, lastContactedDate: e.target.value }))
+                  }
+                  className="form-input"
+                />
+              </FormField>
+            </div>
+
+            <div>
+              <FormField label="Next Follow-up Date">
+                <input
+                  type="date"
+                  value={form.nextFollowUpDate}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, nextFollowUpDate: e.target.value }))
+                  }
+                  className="form-input"
+                />
+              </FormField>
+            </div>
+
+            <div className="col-span-2">
+              <FormField label="Add Activity Note">
+                <textarea
+                  value={form.newNoteText}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, newNoteText: e.target.value }))
+                  }
+                  rows={2}
+                  placeholder="e.g. 9/17 - left voicemail, following up Thursday"
+                  className="form-input resize-none"
+                />
+              </FormField>
+              {editClient && editClient.notesLog?.length > 0 && (
+                <p
+                  className="text-xs mt-1"
+                  style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
+                >
+                  {editClient.notesLog.length} previous {editClient.notesLog.length === 1 ? "entry" : "entries"} — this adds a new timestamped entry to the log.
+                </p>
+              )}
             </div>
           </div>
 

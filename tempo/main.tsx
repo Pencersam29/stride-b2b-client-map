@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App";
 import TempoHost from "./.tempo/tempo-host";
 import { msalInstance } from "../lib/msal";
+import "./globals.css";
 
 await msalInstance.initialize();
 await msalInstance.handleRedirectPromise();

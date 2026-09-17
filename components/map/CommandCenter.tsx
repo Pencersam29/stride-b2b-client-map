@@ -180,7 +180,9 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
   const hcClients = clients.filter((c) => c.type === "Homecare");
   const rhClients = clients.filter((c) => c.type === "Retirement Home");
 
-  const hcSigned = hcClients.filter((c) => c.status === "Signed").length;
+  const hcSignedOrTrial = hcClients.filter(
+    (c) => c.status === "Signed" || c.status === "Interested in Trial"
+  ).length;
   const hcActiveConvos = hcClients.filter(
     (c) => c.status === "In Pipeline" || c.status === "Interested in Trial"
   ).length;
@@ -453,7 +455,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
                   className="text-sm font-bold"
                   style={{ fontFamily: "JetBrains Mono, monospace", color: "#2E55B5" }}
                 >
-                  {hcSigned}
+                  {hcSignedOrTrial}
                 </span>
                 <span className="text-xs text-slate-400">/ 45</span>
               </div>
@@ -505,7 +507,7 @@ export default function CommandCenter({ clients }: CommandCenterProps) {
               <div className="text-xs text-slate-400 mb-1" style={{ fontFamily: "Nunito, system-ui, sans-serif" }}>
                 Trial agreement progress (45 total)
               </div>
-              <ProgressBar value={hcSigned} target={45} color="#2E55B5" />
+              <ProgressBar value={hcSignedOrTrial} target={45} color="#2E55B5" />
             </div>
           </div>
         </div>

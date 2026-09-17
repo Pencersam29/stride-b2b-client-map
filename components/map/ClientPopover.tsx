@@ -1,6 +1,21 @@
 import { useState } from "react";
-import { X, Edit2, Trash2, Mail, User, MapPin, Building2, Heart, Phone } from "lucide-react";
-import { Client, ClientStatus, STATUS_COLORS } from "@/types/client";
+import {
+  X,
+  Edit2,
+  Trash2,
+  Mail,
+  User,
+  MapPin,
+  Building2,
+  Heart,
+  Phone,
+  Flame,
+  Snowflake,
+  CalendarClock,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { Client, ClientStatus, STATUS_COLORS, isOverdue } from "@/types/client";
 
 interface ClientPopoverProps {
   client: Client;
@@ -27,7 +42,13 @@ export default function ClientPopover({
   onStatusChange,
 }: ClientPopoverProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAllNotes, setShowAllNotes] = useState(false);
   const color = STATUS_COLORS[client.status];
+  const overdue = isOverdue(client.nextFollowUpDate);
+  const sortedNotes = [...(client.notesLog ?? [])].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  const visibleNotes = showAllNotes ? sortedNotes : sortedNotes.slice(0, 3);
 
   return (
     <div
@@ -68,6 +89,21 @@ export default function ClientPopover({
                 style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
               >
                 {client.type}
+              </span>
+              <span
+                className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded ml-1"
+                style={{
+                  background: client.leadTemperature === "Warm" ? "#FEF3C7" : "#DBEAFE",
+                  color: client.leadTemperature === "Warm" ? "#B45309" : "#1D4ED8",
+                  fontFamily: "Nunito, system-ui, sans-serif",
+                }}
+              >
+                {client.leadTemperature === "Warm" ? (
+                  <Flame size={9} />
+                ) : (
+                  <Snowflake size={9} />
+                )}
+                {client.leadTemperature}
               </span>
             </div>
           </div>
@@ -120,6 +156,36 @@ export default function ClientPopover({
             >
               {client.phoneWork}
             </a>
+          </InfoRow>
+        )}
+        {client.leadSource && (
+          <InfoRow icon={<User size={12} />} label="Lead Source">
+            {client.leadSource}
+          </InfoRow>
+        )}
+        {(client.lastContactedDate || client.nextFollowUpDate) && (
+          <InfoRow icon={<CalendarClock size={12} />} label="Follow-up">
+            <span className="flex items-center gap-1.5 flex-wrap">
+              {client.lastContactedDate && (
+                <span>Last contacted {client.lastContactedDate}</span>
+              )}
+              {client.nextFollowUpDate && (
+                <span
+                  className="inline-flex items-center gap-1"
+                  style={overdue ? { color: "#FB7185" } : undefined}
+                >
+                  {client.lastContactedDate && "·"} Next: {client.nextFollowUpDate}
+                  {overdue && (
+                    <span
+                      className="text-[9px] font-bold px-1 py-px rounded"
+                      style={{ background: "rgba(251,113,133,0.15)", color: "#FB7185" }}
+                    >
+                      OVERDUE
+                    </span>
+                  )}
+                </span>
+              )}
+            </span>
           </InfoRow>
         )}
       </div>
@@ -176,6 +242,54 @@ export default function ClientPopover({
           >
             {client.notes}
           </p>
+        </div>
+      )}
+
+      {/* Activity log */}
+      {sortedNotes.length > 0 && (
+        <div
+          className="px-4 py-3"
+          style={{ borderTop: "1px solid #1E2533" }}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <p
+              className="text-xs"
+              style={{ color: "#4A5568", fontFamily: "Nunito, system-ui, sans-serif" }}
+            >
+              Activity Log
+            </p>
+            {sortedNotes.length > 3 && (
+              <button
+                onClick={() => setShowAllNotes((v) => !v)}
+                className="flex items-center gap-0.5 text-[10px]"
+                style={{ color: "#38BDF8", fontFamily: "Nunito, system-ui, sans-serif" }}
+              >
+                {showAllNotes ? "Show less" : `Show all (${sortedNotes.length})`}
+                {showAllNotes ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+              </button>
+            )}
+          </div>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {visibleNotes.map((entry, i) => (
+              <div key={i} className="text-xs">
+                <span
+                  className="block"
+                  style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
+                >
+                  {new Date(entry.timestamp).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+                <span
+                  className="leading-relaxed"
+                  style={{ color: "#64748B", fontFamily: "Nunito, system-ui, sans-serif" }}
+                >
+                  {entry.text}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

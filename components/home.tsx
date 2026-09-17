@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Client, ClientStatus, ClientType } from "@/types/client";
+import { Client, ClientStatus, ClientType, NoteEntry } from "@/types/client";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/map/Header";
 import StatsStrip from "@/components/map/StatsStrip";
@@ -9,6 +9,8 @@ import StatusLegend from "@/components/map/StatusLegend";
 import ClientModal from "@/components/map/ClientModal";
 import CommandCenter from "@/components/map/CommandCenter";
 import CallsThisWeek from "@/components/map/CallsThisWeek";
+import PipelineBoard from "@/components/map/PipelineBoard";
+import BulkImportModal from "@/components/map/BulkImportModal";
 
 function dbRowToClient(row: Record<string, unknown>): Client {
   return {
@@ -28,6 +30,11 @@ function dbRowToClient(row: Record<string, unknown>): Client {
     lat: row.lat as number,
     lng: row.lng as number,
     createdAt: new Date(row.created_at as string).getTime(),
+    leadTemperature: (row.lead_temperature as Client["leadTemperature"]) ?? "Warm",
+    leadSource: (row.lead_source as string) ?? "",
+    notesLog: Array.isArray(row.notes_log) ? (row.notes_log as NoteEntry[]) : [],
+    lastContactedDate: (row.last_contacted_date as string) ?? null,
+    nextFollowUpDate: (row.next_follow_up_date as string) ?? null,
   };
 }
 
@@ -47,6 +54,11 @@ function clientToDbRow(data: Omit<Client, "id" | "createdAt">) {
     notes: data.notes,
     lat: data.lat,
     lng: data.lng,
+    lead_temperature: data.leadTemperature,
+    lead_source: data.leadSource || null,
+    notes_log: data.notesLog ?? [],
+    last_contacted_date: data.lastContactedDate || null,
+    next_follow_up_date: data.nextFollowUpDate || null,
   };
 }
 
@@ -65,7 +77,10 @@ export default function Home() {
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [activeView, setActiveView] = useState<"map" | "command">("map");
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [activeView, setActiveView] = useState<"map" | "pipeline" | "command">(
+    "pipeline"
+  );
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   // Load clients from Supabase on mount
@@ -155,6 +170,23 @@ export default function Home() {
     []
   );
 
+  const handleBulkImport = useCallback(
+    async (rows: Omit<Client, "id" | "createdAt">[]) => {
+      const { data: inserted, error } = await supabase
+        .from("clients")
+        .insert(rows.map(clientToDbRow))
+        .select();
+      if (error) throw new Error(error.message);
+      if (inserted) {
+        const newClients = (inserted as Record<string, unknown>[]).map(
+          dbRowToClient
+        );
+        setClients((prev) => [...prev, ...newClients]);
+      }
+    },
+    []
+  );
+
   const handleClientSelectFromSidebar = useCallback((client: Client) => {
     setFlyTarget({ lat: client.lat, lng: client.lng, id: client.id });
     setSelectedClientId(client.id);
@@ -194,6 +226,7 @@ export default function Home() {
         typeFilter={typeFilter}
         onTypeFilterChange={setTypeFilter}
         onAddClient={handleAddClient}
+        onBulkImport={() => setBulkImportOpen(true)}
           activeView={activeView}
           onViewChange={setActiveView}
         onSearchSelect={handleSearchSelect}
@@ -205,6 +238,22 @@ export default function Home() {
           style={{ top: "56px", left: 0, right: 0 }}
         >
           <CommandCenter clients={clients} />
+        </div>
+      ) : activeView === "pipeline" ? (
+        <div
+          className="fixed bottom-0 overflow-y-auto"
+          style={{ top: "56px", left: 0, right: 0, background: "#F8FAFC" }}
+        >
+          <PipelineBoard
+            clients={clients}
+            selectedClientId={selectedClientId}
+            onSelectClient={(client) =>
+              setSelectedClientId(client ? client.id : null)
+            }
+            onEditClient={handleEditClient}
+            onDeleteClient={handleDeleteClient}
+            onStatusChange={handleStatusChange}
+          />
         </div>
       ) : (
         <>
@@ -287,6 +336,13 @@ export default function Home() {
         }}
         onSave={handleSaveClient}
         editClient={editingClient}
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        onImport={handleBulkImport}
       />
     </div>
   );
