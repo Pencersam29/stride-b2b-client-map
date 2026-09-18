@@ -1,5 +1,19 @@
 import { useMemo, useState } from "react";
-import { Heart, Building2, PhoneCall, Snowflake, Flame, Users, TrendingUp } from "lucide-react";
+import {
+  Heart,
+  Building2,
+  PhoneCall,
+  Snowflake,
+  Flame,
+  Users,
+  TrendingUp,
+  Search,
+  X,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  User,
+} from "lucide-react";
 import {
   Client,
   ClientStatus,
@@ -12,6 +26,20 @@ import {
   formatMoney,
 } from "@/types/client";
 import ClientPopover from "./ClientPopover";
+
+// Groups locations of the same business together (e.g. "Right at Home -
+// Oshawa" and "Right at Home - Chicago" both group under "Right at Home").
+function baseCompanyName(name: string): string {
+  const idx = name.indexOf(" - ");
+  return (idx !== -1 ? name.slice(0, idx) : name).trim();
+}
+
+function latestNotePreview(client: Client): string {
+  const sorted = [...(client.notesLog ?? [])].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  return sorted[0]?.text || client.notes || "";
+}
 
 interface PipelineBoardProps {
   clients: Client[];
@@ -49,10 +77,21 @@ export default function PipelineBoard({
   const [typeFilter, setTypeFilter] = useState<ClientType | null>(null);
   const [tempFilter, setTempFilter] = useState<LeadTemperature | null>(null);
   const [followUpOnly, setFollowUpOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ClientStatus | null>(
     null
   );
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const selectedClient = clients.find((c) => c.id === selectedClientId) || null;
 
@@ -73,9 +112,14 @@ export default function PipelineBoard({
         if (tempFilter && c.leadTemperature !== tempFilter) return false;
         if (followUpOnly && !isDueTodayOrOverdue(c.nextFollowUpDate))
           return false;
+        if (
+          searchQuery.trim() &&
+          !c.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+        )
+          return false;
         return true;
       }),
-    [clients, typeFilter, tempFilter, followUpOnly]
+    [clients, typeFilter, tempFilter, followUpOnly, searchQuery]
   );
 
   const columns = useMemo(() => {
@@ -86,6 +130,19 @@ export default function PipelineBoard({
     }
     return map;
   }, [filtered]);
+
+  // "Interested in Trial" groups multiple locations of the same business
+  // together (e.g. every Cornerstone Caregiving location).
+  const trialGroups = useMemo(() => {
+    const trialCards = columns.get("Interested in Trial") ?? [];
+    const map = new Map<string, Client[]>();
+    for (const c of trialCards) {
+      const key = baseCompanyName(c.name);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(c);
+    }
+    return Array.from(map.entries());
+  }, [columns]);
 
   const stats = useMemo(() => computePortfolioStats(clients), [clients]);
   const arrEntries = Object.entries(stats.arrByCurrency);
@@ -221,6 +278,37 @@ export default function PipelineBoard({
 
       {/* Filters */}
       <div className="flex items-center gap-2 px-6 pt-4 pb-2 flex-wrap">
+        <div className="relative w-56 shrink-0">
+          <Search
+            size={13}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 opacity-40"
+            style={{ color: "#94A3B8" }}
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search companies..."
+            className="w-full pl-7 pr-7 py-1.5 text-xs rounded-md outline-none transition-all"
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              color: "#1E293B",
+              fontFamily: "Nunito, system-ui, sans-serif",
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100"
+            >
+              <X size={11} style={{ color: "#94A3B8" }} />
+            </button>
+          )}
+        </div>
+
+        <div className="w-px h-5 mx-1" style={{ background: "#E2E8F0" }} />
+
         {(
           [
             { label: "All", value: null, icon: null },
@@ -350,28 +438,73 @@ export default function PipelineBoard({
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 space-y-2 min-h-[80px]">
-                  {cards.map((client) => (
-                    <PipelineCard
-                      key={client.id}
-                      client={client}
-                      isSelected={selectedClientId === client.id}
-                      isDragging={draggingId === client.id}
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/client-id", client.id);
-                        e.dataTransfer.effectAllowed = "move";
-                        setDraggingId(client.id);
-                      }}
-                      onDragEnd={() => {
-                        setDraggingId(null);
-                        setDragOverColumn(null);
-                      }}
-                      onClick={() =>
-                        onSelectClient(
-                          selectedClientId === client.id ? null : client
+                  {status === "Interested in Trial"
+                    ? trialGroups.map(([key, group]) =>
+                        group.length > 1 ? (
+                          <GroupedTrialCard
+                            key={key}
+                            name={key}
+                            group={group}
+                            isExpanded={expandedGroups.has(key)}
+                            onToggle={() => toggleGroup(key)}
+                            selectedClientId={selectedClientId}
+                            draggingId={draggingId}
+                            onDragStart={(client) => (e) => {
+                              e.dataTransfer.setData("text/client-id", client.id);
+                              e.dataTransfer.effectAllowed = "move";
+                              setDraggingId(client.id);
+                            }}
+                            onDragEnd={() => {
+                              setDraggingId(null);
+                              setDragOverColumn(null);
+                            }}
+                            onSelectClient={onSelectClient}
+                          />
+                        ) : (
+                          <PipelineCard
+                            key={group[0].id}
+                            client={group[0]}
+                            isSelected={selectedClientId === group[0].id}
+                            isDragging={draggingId === group[0].id}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("text/client-id", group[0].id);
+                              e.dataTransfer.effectAllowed = "move";
+                              setDraggingId(group[0].id);
+                            }}
+                            onDragEnd={() => {
+                              setDraggingId(null);
+                              setDragOverColumn(null);
+                            }}
+                            onClick={() =>
+                              onSelectClient(
+                                selectedClientId === group[0].id ? null : group[0]
+                              )
+                            }
+                          />
                         )
-                      }
-                    />
-                  ))}
+                      )
+                    : cards.map((client) => (
+                        <PipelineCard
+                          key={client.id}
+                          client={client}
+                          isSelected={selectedClientId === client.id}
+                          isDragging={draggingId === client.id}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/client-id", client.id);
+                            e.dataTransfer.effectAllowed = "move";
+                            setDraggingId(client.id);
+                          }}
+                          onDragEnd={() => {
+                            setDraggingId(null);
+                            setDragOverColumn(null);
+                          }}
+                          onClick={() =>
+                            onSelectClient(
+                              selectedClientId === client.id ? null : client
+                            )
+                          }
+                        />
+                      ))}
                   {cards.length === 0 && (
                     <div
                       className="text-xs text-center py-6"
@@ -516,5 +649,147 @@ function PipelineCard({
           </div>
         )}
     </button>
+  );
+}
+
+function GroupedTrialCard({
+  name,
+  group,
+  isExpanded,
+  onToggle,
+  selectedClientId,
+  draggingId,
+  onDragStart,
+  onDragEnd,
+  onSelectClient,
+}: {
+  name: string;
+  group: Client[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  selectedClientId: string | null;
+  draggingId: string | null;
+  onDragStart: (client: Client) => (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+  onSelectClient: (client: Client | null) => void;
+}) {
+  const color = STATUS_COLORS["Interested in Trial"];
+  const anyOverdue = group.some((c) => isOverdue(c.nextFollowUpDate));
+  const type = group[0].type;
+
+  return (
+    <div
+      className="rounded-lg overflow-hidden"
+      style={{ border: "1px solid #E2E8F0", background: "#FFFFFF" }}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full text-left p-3 transition-all hover:bg-slate-50"
+      >
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <span
+            className="text-sm font-semibold leading-tight"
+            style={{ color: "#1E293B", fontFamily: "Nunito, system-ui, sans-serif" }}
+          >
+            {name}
+          </span>
+          <div className="flex items-center gap-1 shrink-0 mt-0.5">
+            {anyOverdue && (
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ background: "#FB7185", boxShadow: "0 0 4px #FB7185" }}
+                title="A location has an overdue follow-up"
+              />
+            )}
+            {isExpanded ? (
+              <ChevronUp size={12} style={{ color: "#94A3B8" }} />
+            ) : (
+              <ChevronDown size={12} style={{ color: "#94A3B8" }} />
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span
+            className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded"
+            style={{ background: "#F1F5F9", color: "#64748B", fontFamily: "Nunito, system-ui, sans-serif" }}
+          >
+            {type === "Homecare" ? <Heart size={9} /> : <Building2 size={9} />}
+            {type === "Homecare" ? "Homecare" : "RH"}
+          </span>
+          <span
+            className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold"
+            style={{ background: color + "18", color, fontFamily: "Nunito, system-ui, sans-serif" }}
+          >
+            {group.length} locations
+          </span>
+        </div>
+      </button>
+
+      {isExpanded && (
+        <div
+          className="space-y-1.5 p-2 pt-0"
+          style={{ borderTop: "1px solid #F1F5F9" }}
+        >
+          {group.map((client) => {
+            const isSelected = selectedClientId === client.id;
+            const overdue = isOverdue(client.nextFollowUpDate);
+            const note = latestNotePreview(client);
+            return (
+              <button
+                key={client.id}
+                draggable
+                onDragStart={onDragStart(client)}
+                onDragEnd={onDragEnd}
+                onClick={() => onSelectClient(isSelected ? null : client)}
+                className="w-full text-left rounded-md p-2 transition-all cursor-grab active:cursor-grabbing"
+                style={{
+                  background: isSelected ? "rgba(46,85,181,0.05)" : "#F8FAFC",
+                  border: `1px solid ${isSelected ? "#2E55B5" : "#E2E8F0"}`,
+                  opacity: draggingId === client.id ? 0.4 : 1,
+                }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <User size={10} style={{ color: "#94A3B8" }} className="shrink-0" />
+                    <span
+                      className="text-xs font-semibold truncate"
+                      style={{ color: "#334155", fontFamily: "Nunito, system-ui, sans-serif" }}
+                    >
+                      {client.contactName}
+                    </span>
+                  </div>
+                  {overdue && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ background: "#FB7185" }}
+                      title="Follow-up overdue"
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <MapPin size={9} style={{ color: "#CBD5E1" }} className="shrink-0" />
+                  <span
+                    className="text-[10px] truncate"
+                    style={{ color: "#94A3B8", fontFamily: "Nunito, system-ui, sans-serif" }}
+                  >
+                    {client.city}
+                    {client.provinceState ? `, ${client.provinceState}` : ""}
+                  </span>
+                </div>
+                {note && (
+                  <p
+                    className="text-[10px] mt-1 truncate italic"
+                    style={{ color: "#B0B9C6", fontFamily: "Nunito, system-ui, sans-serif" }}
+                  >
+                    "{note}"
+                  </p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
