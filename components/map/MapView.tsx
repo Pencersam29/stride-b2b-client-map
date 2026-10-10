@@ -1,9 +1,19 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Client, ClientStatus, ClientType, STATUS_COLORS } from "@/types/client";
 import ClientPopover from "./ClientPopover";
+
+// Consistent wedge ordering so a mixed-status dot always looks the same
+const STATUS_ORDER: ClientStatus[] = [
+  "Signed",
+  "Interested in Trial",
+  "In Pipeline",
+  "Prospect",
+  "On Hold",
+  "Not Interested",
+];
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -14,24 +24,53 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-function createPinIcon(color: string, isHighlighted: boolean, isPulse: boolean) {
-  const size = isHighlighted ? 18 : 14;
+// Pie wedge path, or a full circle when there's only one color
+function wedgePath(cx: number, cy: number, r: number, i: number, total: number) {
+  if (total === 1) {
+    return `M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0 Z`;
+  }
+  // start at 12 o'clock so a two-color dot reads as left half / right half
+  const a0 = (i / total) * Math.PI * 2 - Math.PI / 2;
+  const a1 = ((i + 1) / total) * Math.PI * 2 - Math.PI / 2;
+  const largeArc = a1 - a0 > Math.PI ? 1 : 0;
+  return [
+    `M ${cx} ${cy}`,
+    `L ${cx + r * Math.cos(a0)} ${cy + r * Math.sin(a0)}`,
+    `A ${r} ${r} 0 ${largeArc} 1 ${cx + r * Math.cos(a1)} ${cy + r * Math.sin(a1)}`,
+    "Z",
+  ].join(" ");
+}
+
+function pie(cx: number, cy: number, r: number, colors: string[], opacity: number, glow: boolean) {
+  return colors
+    .map(
+      (c, i) =>
+        `<path d="${wedgePath(cx, cy, r, i, colors.length)}" fill="${c}" opacity="${opacity}"${glow ? ` style="filter:drop-shadow(0 0 8px ${c})"` : ""}/>`
+    )
+    .join("");
+}
+
+function createPinIcon(colors: string[], isHighlighted: boolean, isPulse: boolean) {
+  // Grow the dot a little when it stands for more than one business
+  const base = colors.length > 1 ? 17 : 14;
+  const size = isHighlighted ? base + 4 : base;
+  const iconSize = size + 16;
+  const c = iconSize / 2;
 
   const svg = `
-    <svg width="${size + 16}" height="${size + 16}" viewBox="0 0 ${size + 16} ${size + 16}" xmlns="http://www.w3.org/2000/svg">
+    <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 ${iconSize} ${iconSize}" xmlns="http://www.w3.org/2000/svg">
       ${isPulse ? `
-        <circle cx="${(size + 16) / 2}" cy="${(size + 16) / 2}" r="${size / 2 + 6}" fill="${color}" opacity="0.15">
+        <circle cx="${c}" cy="${c}" r="${size / 2 + 6}" fill="${colors[0]}" opacity="0.15">
           <animate attributeName="r" values="${size / 2 + 4};${size / 2 + 10};${size / 2 + 4}" dur="1.5s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values="0.2;0;0.2" dur="1.5s" repeatCount="indefinite"/>
         </circle>
       ` : ""}
-      <circle cx="${(size + 16) / 2}" cy="${(size + 16) / 2}" r="${size / 2 + 3}" fill="${color}" opacity="0.18"/>
-      <circle cx="${(size + 16) / 2}" cy="${(size + 16) / 2}" r="${size / 2}" fill="${color}" style="filter:drop-shadow(0 0 8px ${color})"/>
-      <circle cx="${(size + 16) / 2}" cy="${(size + 16) / 2}" r="${size / 4}" fill="rgba(255,255,255,0.4)"/>
+      ${pie(c, c, size / 2 + 3, colors, 0.18, false)}
+      ${pie(c, c, size / 2, colors, 1, true)}
+      <circle cx="${c}" cy="${c}" r="${size / 4}" fill="rgba(255,255,255,0.4)"/>
     </svg>
   `;
 
-  const iconSize = size + 16;
   return L.divIcon({
     html: svg,
     className: "",
@@ -111,6 +150,110 @@ function ZoomControls() {
   );
 }
 
+// Clients whose dots would overlap at the current zoom are drawn as one
+// multi-color dot, so a city with two different statuses never reads as one.
+const CLUSTER_PX = 26;
+
+interface ClientCluster {
+  lat: number;
+  lng: number;
+  members: Client[];
+}
+
+function ClientMarkers({
+  clients,
+  activeFilter,
+  typeFilter,
+  selectedClientId,
+  onSelectClient,
+  highlightedClientId,
+}: {
+  clients: Client[];
+  activeFilter: ClientStatus | null;
+  typeFilter: ClientType | null;
+  selectedClientId: string | null;
+  onSelectClient: (client: Client | null) => void;
+  highlightedClientId: string | null;
+}) {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+  useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
+
+  const clusters = useMemo(() => {
+    const out: ClientCluster[] = [];
+    for (const client of clients) {
+      const p = map.project([client.lat, client.lng], zoom);
+      const hit = out.find((c) => {
+        const q = map.project([c.lat, c.lng], zoom);
+        return Math.hypot(p.x - q.x, p.y - q.y) <= CLUSTER_PX;
+      });
+      if (hit) {
+        hit.members.push(client);
+        hit.lat =
+          hit.members.reduce((s, m) => s + m.lat, 0) / hit.members.length;
+        hit.lng =
+          hit.members.reduce((s, m) => s + m.lng, 0) / hit.members.length;
+      } else {
+        out.push({ lat: client.lat, lng: client.lng, members: [client] });
+      }
+    }
+    return out;
+  }, [clients, zoom, map]);
+
+  return (
+    <>
+      {clusters.map((cluster) => {
+        const passes = (c: Client) =>
+          (activeFilter === null || c.status === activeFilter) &&
+          (typeFilter === null || c.type === typeFilter);
+
+        const visible = cluster.members.filter(passes);
+        const isFiltered = visible.length === 0;
+        // Dim a whole cluster only when nothing in it passes the filter
+        const shown = isFiltered ? cluster.members : visible;
+
+        const statuses = STATUS_ORDER.filter((s) =>
+          shown.some((c) => c.status === s)
+        );
+        const colors = statuses.map((s) => STATUS_COLORS[s]);
+
+        const isSelected = shown.some((c) => c.id === selectedClientId);
+        const isHighlighted = shown.some((c) => c.id === highlightedClientId);
+
+        const icon = createPinIcon(
+          colors,
+          isSelected || isHighlighted,
+          isHighlighted && !isSelected
+        );
+
+        return (
+          <Marker
+            key={cluster.members.map((c) => c.id).join("|")}
+            position={[cluster.lat, cluster.lng]}
+            icon={icon}
+            opacity={isFiltered ? 0.12 : 1}
+            eventHandlers={{
+              click: () => {
+                // Several businesses under one dot: zoom in to split them apart
+                if (shown.length > 1 && zoom < 13) {
+                  map.flyTo([cluster.lat, cluster.lng], Math.min(zoom + 4, 13), {
+                    duration: 0.8,
+                  });
+                  return;
+                }
+                const target = shown[0];
+                onSelectClient(
+                  target.id === selectedClientId ? null : target
+                );
+              },
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 interface MapViewProps {
   clients: Client[];
   activeFilter: ClientStatus | null;
@@ -158,32 +301,14 @@ export default function MapView({
         <FlyToControl target={flyTarget} onDone={onFlyDone} />
         <ZoomControls />
 
-        {clients.map((client) => {
-          const isFiltered =
-            (activeFilter !== null && client.status !== activeFilter) ||
-            (typeFilter !== null && client.type !== typeFilter);
-          const isSelected = client.id === selectedClientId;
-          const isHighlighted = client.id === highlightedClientId;
-          const color = STATUS_COLORS[client.status];
-
-          const icon = createPinIcon(
-            color,
-            isSelected || isHighlighted,
-            isHighlighted && !isSelected
-          );
-
-          return (
-            <Marker
-              key={client.id}
-              position={[client.lat, client.lng]}
-              icon={icon}
-              opacity={isFiltered ? 0.12 : 1}
-              eventHandlers={{
-                click: () => onSelectClient(isSelected ? null : client),
-              }}
-            />
-          );
-        })}
+        <ClientMarkers
+          clients={clients}
+          activeFilter={activeFilter}
+          typeFilter={typeFilter}
+          selectedClientId={selectedClientId}
+          onSelectClient={onSelectClient}
+          highlightedClientId={highlightedClientId}
+        />
       </MapContainer>
 
       {/* Client Popover */}
