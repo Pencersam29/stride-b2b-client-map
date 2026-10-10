@@ -41,21 +41,36 @@ function wedgePath(cx: number, cy: number, r: number, i: number, total: number) 
   ].join(" ");
 }
 
-function pie(cx: number, cy: number, r: number, colors: string[], opacity: number, glow: boolean) {
+function pie(
+  cx: number,
+  cy: number,
+  r: number,
+  colors: string[],
+  opacity: number,
+  divider: boolean
+) {
   return colors
     .map(
       (c, i) =>
-        `<path d="${wedgePath(cx, cy, r, i, colors.length)}" fill="${c}" opacity="${opacity}"${glow ? ` style="filter:drop-shadow(0 0 8px ${c})"` : ""}/>`
+        `<path d="${wedgePath(cx, cy, r, i, colors.length)}" fill="${c}" opacity="${opacity}"${
+          divider && colors.length > 1
+            ? ` stroke="#FFFFFF" stroke-width="1.25" stroke-linejoin="round"`
+            : ""
+        }/>`
     )
     .join("");
 }
 
 function createPinIcon(colors: string[], isHighlighted: boolean, isPulse: boolean) {
-  // Grow the dot a little when it stands for more than one business
-  const base = colors.length > 1 ? 17 : 14;
+  const isMulti = colors.length > 1;
+  // A dot standing for several businesses is bigger, so each wedge stays readable
+  const base = isMulti ? 20 : 14;
   const size = isHighlighted ? base + 4 : base;
   const iconSize = size + 16;
   const c = iconSize / 2;
+
+  // The glow washes a split dot into one muddy color, so only single dots get it
+  const glow = isMulti ? "" : ` style="filter:drop-shadow(0 0 8px ${colors[0]})"`;
 
   const svg = `
     <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 ${iconSize} ${iconSize}" xmlns="http://www.w3.org/2000/svg">
@@ -65,9 +80,9 @@ function createPinIcon(colors: string[], isHighlighted: boolean, isPulse: boolea
           <animate attributeName="opacity" values="0.2;0;0.2" dur="1.5s" repeatCount="indefinite"/>
         </circle>
       ` : ""}
-      ${pie(c, c, size / 2 + 3, colors, 0.18, false)}
-      ${pie(c, c, size / 2, colors, 1, true)}
-      <circle cx="${c}" cy="${c}" r="${size / 4}" fill="rgba(255,255,255,0.4)"/>
+      ${pie(c, c, size / 2 + 3, colors, isMulti ? 0.22 : 0.18, false)}
+      <g${glow}>${pie(c, c, size / 2, colors, 1, true)}</g>
+      ${isMulti ? "" : `<circle cx="${c}" cy="${c}" r="${size / 4}" fill="rgba(255,255,255,0.4)"/>`}
     </svg>
   `;
 
